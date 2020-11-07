@@ -12,6 +12,11 @@ __AUTHOR__='S0AndS0'
 __DESCRIPTION__='Tests torrific-curl wrapper script'
 
 
+## Prvides argument_parser '_passed_args' '_acceptable_args'
+# shellcheck source=modules/argument-parser/argument-parser.sh
+source "${__PARENT_DIR__}/modules/argument-parser/argument-parser.sh"
+
+
 ## Provides tests__features__check_tor '<download_path>'
 # shellcheck source=.travis-ci/features/check-tor.sh
 source "${__DIR__}/features/check-tor.sh"
@@ -72,6 +77,11 @@ ${__DESCRIPTION__}
     {Optional} Prints license and exits
 
 
+-f      --failure-threshold <number> ${_failure_threshold}
+
+    {Optional} Number of failures that causes ${__NAME__} to exit with error
+
+
 ## Example
 
 
@@ -90,14 +100,42 @@ test_function() {
     "${_function_name}" "${_function_arguments[@]}" || {
         local _status="${?}"
         printf 'Failed -> %s\n' "${_function_name}"
+        (( _falure_count++ )) || { true; }
+        [[ "${_falure_count}" -ge "${_failure_threshold}" ]] && {
+            exit "${_status}"
+        }
         return "${_status}"
     }
 }
 
 
-_args=( "${@}" )
-(( ${#_args} )) && {
+## Defaults
+_failure_threshold=3
+_falure_count=0
+
+
+## Parse arguemnts
+# shellcheck disable=SC2034
+{
+    _passed_args=( "${@}" )
+    _acceptable_args=(
+        '--help|-h:bool'
+        '--license|-l:bool'
+        '--failure-threshold|-f:number'
+    )
+}
+argument_parser '_passed_args' '_acceptable_args'
+_parser_status="${?}"
+
+
+(( _help )) || (( _parser_status )) && {
     __usage__
+    exit "${_parser_status:-0}"
+}
+
+(( _license )) && {
+    __license__
+    exit 0
 }
 
 
