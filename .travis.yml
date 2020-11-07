@@ -40,6 +40,7 @@ before_install:
 before_script:
   - shellcheck -x .travis-ci/tests.sh
   - shellcheck -x torrific-curl
+  - sudo make config
   - sudo make install
 
 script:
