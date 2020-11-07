@@ -5,11 +5,14 @@
 # Submit a POST request over Tor
 # @parameter {string} $1 - Download path
 tests__features__get_request() {
+    printf '# Started -> %s\n' "${FUNCNAME[0]}"
+
     local _download_path="${1:-/tmp/httpbin.org__get.json}"
     local _url='https://httpbin.org/get'
     local _grep_string='HTTP/2 200'
 
     local -a _curl_options=(
+        --silent
         --include
         -H 'Accept: application/json'
         -H 'Content-Type: application/json'
@@ -34,6 +37,8 @@ tests__features__get_request() {
         printf >&2 '%s error -> failed to detect that Curl used Tor correctly\n' "${FUNCNAME[0]}"
         return 1
     }
+
+    printf '# Finished -> %s\n' "${FUNCNAME[0]}"
 }
 
 
