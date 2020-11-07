@@ -6,3 +6,7 @@
 	path = modules/trap-failure
 	url = git@github.com:bash-utilities/trap-failure.git
 	branch = master
+[submodule "array-splice"]
+	path = modules/array-splice
+	url = git@github.com:bash-utilities/array-splice.git
+	branch = main
