@@ -14,23 +14,23 @@ __DESCRIPTION__='Tests torrific-curl wrapper script'
 
 ## Provides tests__features__check_tor '<download_path>'
 # shellcheck source=.travis-ci/features/check-tor.sh
-source "${__DIR__}/.travis-ci/features/check-tor.sh"
+source "${__DIR__}/features/check-tor.sh"
 
 ## Provides tests__features__user_agent '<download_path>'
 # shellcheck source=.travis-ci/features/user-agent.sh
-source "${__DIR__}/.travis-ci/features/user-agent.sh"
+source "${__DIR__}/features/user-agent.sh"
 
 ## Provides tests__features__onion '<download_path>'
 # shellcheck source=.travis-ci/features/onion.sh
-source "${__DIR__}/.travis-ci/features/onion.sh"
+source "${__DIR__}/features/onion.sh"
 
 ## Provides tests__features__post_request_data '<download_path>'
 # shellcheck source=.travis-ci/features/post-request-data.sh
-source "${__DIR__}/.travis-ci/features/post-request-data.sh"
+source "${__DIR__}/features/post-request-data.sh"
 
 ## Provides tests__features__get_request '<download_path>'
 # shellcheck source=.travis-ci/features/get-request.sh
-source "${__DIR__}/.travis-ci/features/get-request.sh"
+source "${__DIR__}/features/get-request.sh"
 
 
 __license__(){
