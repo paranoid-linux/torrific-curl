@@ -5,7 +5,7 @@
 git:
   depth: 10
   quite: true
-  submodules: false
+  submodules: true
 
 
 ## Attempt to limit environment to only what is required
