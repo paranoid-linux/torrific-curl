@@ -1,0 +1,169 @@
+#!/usr/bin/env bash
+
+## Find true directory script resides in, true name, and true path
+__SOURCE__="${BASH_SOURCE[0]}"
+while [[ -h "${__SOURCE__}" ]]; do
+    __SOURCE__="$(find "${__SOURCE__}" -type l -ls | sed -n 's@^.* -> \(.*\)@\1@p')"
+done
+__DIR__="$(cd -P "$(dirname "${__SOURCE__}")" && pwd)"
+__NAME__="${__SOURCE__##*/}"
+__AUTHOR__='S0AndS0'
+__DESCRIPTION__='Curl wrapper with Tor configuration defaults'
+
+
+## Provides: 'falure' <line-number> <command> exit-code
+# shellcheck source=modules/trap-failure/failure.sh
+source "${__DIR__}/modules/trap-failure/failure.sh"
+trap 'failure "LINENO" "BASH_LINENO" "${BASH_COMMAND}" "${?}"' ERR
+
+## Provides: 'argument_parser' <ref_to_allowed_args> <ref_to_user_supplied_args>
+# shellcheck source=modules/argument-parser/argument-parser.sh
+source "${__DIR__}/modules/argument-parser/argument-parser.sh"
+
+## Provides: 'array_splice' -t <array_ref_target> -d <array_ref_deleted> -e <name>
+# shellcheck source=modules/array-splice/array-splice.sh
+source "${__DIR__}/modules/array-splice/array-splice.sh"
+
+## Provides: 'print_array' <array_ref> <padding_amount>
+##           'pad_string' <length> <character>
+# shellcheck source=lib/print-array.sh
+source "${__DIR__}/lib/print-array.sh"
+
+
+__license__(){
+    _year="$(date +'%Y')"
+    cat <<EOF
+${__DESCRIPTION__}
+Copyright (C) ${_year:-2020} ${__AUTHOR__:-S0AndS0}
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, version 3 of the License.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+EOF
+}
+
+
+__usage__() {
+    local _message="${1}"
+    cat <<EOF
+${__DESCRIPTION__}
+
+
+## Parameters
+
+
+-h       --help <boolean> ${_help:-0}
+
+    {Optional} Prints this message and exists
+
+
+-l       --license <boolean> ${_license:-0}
+
+    {Optional} Prints license and exits
+
+
+-v       --verbose <boolean> ${_verbose:-0}
+
+    {Optional} Prints full Curl command and options prior to running
+
+
+-A       --user-agent <string> "${_user_agent}"
+
+    {Optional} User agent to send remote server
+
+
+--socks5 <string> "${_socks5}"
+
+    {Optional} Socks5 address:port to connect to Tor service via
+
+
+--socks5-hostname <string> "${_socks5_hostname}"
+
+    {Optional} Socks5 hostname:port to connect to Tor service via
+
+
+## Example
+
+    ${__NAME__} 'https://check.torproject.org/' -o /tmp/check-torproject.org.html
+
+
+## Current Options
+
+EOF
+
+    print_array '_curl_options'
+
+    if (( ${#_message} )); then
+        printf >&2 '\n## Error: %s\n' "${_message}"
+        exit 1
+    fi
+}
+
+
+#
+#    Defaults
+#
+_socks5='localhost:9050'
+_socks5_hostname='localhost:9050'
+_user_agent='Mozilla/5.0 (Windows NT 10.0; rv:78.0) Gecko/20100101 Firefox/78.0'
+
+
+#
+#    Read & save recognized arguments to variables
+#
+_args=( "${@}" )
+(( ${#_args[@]} )) || {
+    __usage__ "no arguments provided to ${__NAME__}"
+}
+# shellcheck disable=SC2034
+_wrapper_args=('--help|-h|help:bool'
+               '--license|-l|license:bool'
+               '--verbose|-v:bool'
+               '--user-agent|-A:print'
+               '--socks5:print'
+               '--socks5-hostname:print')
+argument_parser '_args' '_wrapper_args'
+_exit_status="$?"
+
+
+#
+#    Treat '--user-agent', '--socks5', and '--socks5-hostname' special
+#
+array_splice --target '_args' --element '--socks5' --offset 1 2>/dev/null || true
+array_splice --target '_args' --element '--socks5-hostname' --offset 1 2>/dev/null || true
+array_splice --target '_args' --element '--user-agent' --offset 1 2>/dev/null || true
+
+
+_curl_options=(
+    '--socks5' "${_socks5}"
+    '--socks5-hostname' "${_socks5_hostname}"
+    '--user-agent' "${_user_agent}"
+    "${_args[@]}"
+)
+
+
+if (( _help )) || (( _exit_status )); then
+    __usage__
+    exit ${_exit_status:-0}
+fi
+
+if (( _license )); then
+    __license__
+    exit ${_exit_status:-0}
+fi
+
+
+if (( _verbose )); then
+    # printf '_curl_options -> %s\n' "${_curl_options[*]}"
+    print_array '_curl_options'
+fi
+curl "${_curl_options[@]}"
+
